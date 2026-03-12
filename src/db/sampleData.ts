@@ -115,11 +115,6 @@ export async function seedSampleData() {
   });
 
   // Journal entries — none seeded, user writes their own
-  const journalEntries: object[] = [];
-
-  for (const entry of journalEntries) {
-    await db.journalEntries.add(entry);
-  }
 
   // Learning tracks
   const nepseTrackId = await db.learningTracks.add({
