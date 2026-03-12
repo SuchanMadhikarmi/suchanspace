@@ -118,9 +118,9 @@ export default function GoalsSection() {
   });
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '40px 32px' }}>
+    <div className="section-content" style={{ maxWidth: 960 }}>
       {/* Header */}
-      <div className="stagger-1" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
+      <div className="stagger-1 section-head" style={{ marginBottom: 32 }}>
         <div>
           <h1 className="font-serif" style={{ fontSize: 38, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Goals & Projects</h1>
           <p style={{ color: 'var(--muted)', fontSize: 15, fontFamily: "'DM Sans', sans-serif" }}>
@@ -330,7 +330,7 @@ export default function GoalsSection() {
                 {/* Expanded projects — Kanban-lite */}
                 {isExpanded && (
                   <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 12 }}>
+                    <div className="rg-2" style={{ gap: 12 }}>
                       {(['not-started', 'in-progress', 'blocked', 'done'] as ProjectStatus[]).map(status => {
                         const statusProjects = goalProjects.filter(p => p.status === status);
                         const labels: Record<ProjectStatus, string> = {

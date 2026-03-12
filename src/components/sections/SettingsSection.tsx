@@ -51,7 +51,7 @@ export default function SettingsSection() {
   };
 
   return (
-    <div style={{ maxWidth: 620, margin: '0 auto', padding: '40px 32px' }}>
+    <div className="section-content" style={{ maxWidth: 620 }}>
       <div className="stagger-1">
         <h1 className="font-serif" style={{ fontSize: 38, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Settings</h1>
         <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 32, fontFamily: "'DM Sans', sans-serif" }}>Customize your SuchanSpace experience</p>
@@ -115,7 +115,7 @@ export default function SettingsSection() {
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 18, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'DM Sans', sans-serif" }}>
           Your Data
         </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 20 }}>
+        <div className="rg-4-2" style={{ gap: 12, marginBottom: 20 }}>
           {[
             { label: 'Habits', value: habitsCount ?? 0 },
             { label: 'Tasks', value: tasksCount ?? 0 },

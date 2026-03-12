@@ -124,9 +124,9 @@ export default function WeeklyReviewSection() {
   const q = REVIEW_QUESTIONS[questionIndex];
 
   return (
-    <div style={{ maxWidth: 840, margin: '0 auto', padding: '40px 32px' }}>
+    <div className="section-content" style={{ maxWidth: 840 }}>
       {/* Header */}
-      <div className="stagger-1" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div className="stagger-1 section-head" style={{ marginBottom: 28 }}>
         <div>
           <h1 className="font-serif" style={{ fontSize: 38, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Weekly Review</h1>
           <div style={{ fontSize: 14, color: 'var(--muted)', fontFamily: "'DM Sans', sans-serif" }}>
@@ -163,7 +163,7 @@ export default function WeeklyReviewSection() {
           </div>
 
           {/* Week stats overview */}
-          <div className="stagger-2" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
+          <div className="stagger-2 rg-4-2" style={{ gap: 12, marginBottom: 24 }}>
             {[
               { label: 'Tasks Done', value: `${tasksCompleted}/${totalTasks}`, color: 'var(--green)' },
               { label: 'Avg Daily Score', value: `${avgScore}%`, color: 'var(--sage)' },

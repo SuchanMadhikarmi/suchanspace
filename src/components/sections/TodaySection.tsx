@@ -94,7 +94,7 @@ export default function TodaySection() {
   const bsDate = formatBSDate();
 
   return (
-    <div style={{ maxWidth: 880, margin: '0 auto', padding: '40px 32px' }}>
+    <div className="section-content" style={{ maxWidth: 880 }}>
       {/* HERO HEADER */}
       <div className="stagger-1" style={{ marginBottom: 36 }}>
         <h1
@@ -155,7 +155,7 @@ export default function TodaySection() {
       </div>
 
       {/* TODAY SCORE + ENERGY */}
-      <div className="stagger-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 16, marginBottom: 24 }}>
+      <div className="stagger-2 rg-3" style={{ gap: 16, marginBottom: 24 }}>
         <div className="card" style={{ padding: '20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8 }}>
           <CircularProgress value={dailyScore} size={90} sublabel="Day Score" />
           <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: "'DM Sans', sans-serif", textAlign: 'center' }}>

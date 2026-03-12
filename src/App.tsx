@@ -2,7 +2,9 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { db } from './db/db'
 import { useApp } from './context/AppContext'
+import { useIsMobile } from './hooks/useIsMobile'
 import Sidebar from './components/layout/Sidebar'
+import BottomNav from './components/layout/BottomNav'
 import ToastContainer from './components/common/Toast'
 import TodaySection from './components/sections/TodaySection'
 import HabitsSection from './components/sections/HabitsSection'
@@ -17,6 +19,7 @@ import FocusModeOverlay from './components/FocusModeOverlay'
 function AppInner() {
   const { activeSection, sidebarCollapsed, focusMode, setFocusMode } = useApp()
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null)
+  const isMobile = useIsMobile()
 
   const allSettings = useLiveQuery(() => db.settings.toArray(), [])
 
@@ -51,17 +54,19 @@ function AppInner() {
     )
   }
 
-  const sidebarW = sidebarCollapsed ? 64 : 220
+  const sidebarW = isMobile ? 0 : (sidebarCollapsed ? 64 : 220)
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
-      <Sidebar />
+      {!isMobile && <Sidebar />}
       <main style={{
         flex: 1,
         marginLeft: sidebarW,
         minHeight: '100vh',
         overflowY: 'auto',
+        overflowX: 'hidden',
         transition: 'margin-left 250ms ease',
+        paddingBottom: isMobile ? 60 : 0,
       }}>
         {activeSection === 'today' && <TodaySection />}
         {activeSection === 'habits' && <HabitsSection />}
@@ -72,6 +77,7 @@ function AppInner() {
         {activeSection === 'settings' && <SettingsSection />}
       </main>
 
+      {isMobile && <BottomNav />}
       {focusMode && <FocusModeOverlay />}
       <ToastContainer />
     </div>

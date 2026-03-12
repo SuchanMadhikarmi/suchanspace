@@ -125,9 +125,9 @@ export default function LearningSection() {
   const TRACK_COLORS = ['#1A3C2E', '#C4622D', '#4A7C59', '#D97706', '#7B5EA7', '#1E6F8E'];
 
   return (
-    <div style={{ maxWidth: 960, margin: '0 auto', padding: '40px 32px' }}>
+    <div className="section-content" style={{ maxWidth: 960 }}>
       {/* Header */}
-      <div className="stagger-1" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div className="stagger-1 section-head" style={{ marginBottom: 28 }}>
         <div>
           <h1 className="font-serif" style={{ fontSize: 38, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Learning</h1>
           <div style={{ fontSize: 14, color: 'var(--muted)', fontFamily: "'DM Sans', sans-serif" }}>
@@ -192,7 +192,7 @@ export default function LearningSection() {
       </div>
 
       {/* Charts row */}
-      <div className="stagger-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 28 }}>
+      <div className="stagger-3 rg-2" style={{ gap: 20, marginBottom: 28 }}>
         {/* Hours by subject */}
         <div className="card" style={{ padding: '20px' }}>
           <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 14, fontFamily: "'DM Sans', sans-serif" }}>Hours by Subject</div>

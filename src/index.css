@@ -191,3 +191,61 @@ input[type='range']::-webkit-slider-thumb:hover { transform: scale(1.2); }
   background-size: 200% auto;
   animation: shimmer 1.5s linear infinite;
 }
+
+/* ============================================================
+   RESPONSIVE LAYOUT UTILITIES
+   ============================================================ */
+
+/* Section wrapper — controls padding responsively */
+.section-content {
+  margin: 0 auto;
+  padding: 40px 32px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive grid utilities */
+.rg-2 { display: grid; grid-template-columns: 1fr 1fr; }
+.rg-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+.rg-4 { display: grid; grid-template-columns: repeat(4, 1fr); }
+.rg-4-2 { display: grid; grid-template-columns: repeat(4, 1fr); }
+.journal-editor-grid { display: grid; grid-template-columns: 1fr 280px; }
+
+@media (max-width: 768px) {
+  /* Section padding: tight on mobile, extra bottom for nav bar */
+  .section-content {
+    padding: 20px 16px 80px;
+  }
+
+  /* All grids collapse to single column */
+  .rg-2,
+  .rg-3,
+  .rg-4 { grid-template-columns: 1fr; }
+
+  /* 4-col stats → 2-col on mobile (looks better than 1-col) */
+  .rg-4-2 { grid-template-columns: 1fr 1fr; }
+
+  /* Journal editor: stack sidebar below editor */
+  .journal-editor-grid { grid-template-columns: 1fr; }
+
+  /* Card tweaks */
+  .card { border-radius: 12px; }
+
+  /* Prevent any horizontal overflow */
+  body { overflow-x: hidden; }
+}
+
+@media (max-width: 480px) {
+  /* Very small screens: 4-col stats also go full single column */
+  .rg-4-2 { grid-template-columns: 1fr 1fr; }
+}
+
+/* Section top header rows: flex, wrap on mobile */
+.section-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+@media (max-width: 600px) {
+  .section-head { flex-wrap: wrap; gap: 10px; }
+}

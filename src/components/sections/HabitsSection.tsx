@@ -158,9 +158,9 @@ export default function HabitsSection() {
   const worstDay = dayAnalysis.reduce((worst, d) => d.rate < worst.rate ? d : worst, { day: '', rate: 100 });
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', padding: '40px 32px' }}>
+    <div className="section-content" style={{ maxWidth: 920 }}>
       {/* Header */}
-      <div className="stagger-1" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32 }}>
+      <div className="stagger-1 section-head" style={{ marginBottom: 32 }}>
         <div>
           <h1 className="font-serif" style={{ fontSize: 38, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Habits</h1>
           <p style={{ color: 'var(--muted)', fontSize: 15, fontFamily: "'DM Sans', sans-serif" }}>
@@ -173,7 +173,7 @@ export default function HabitsSection() {
       </div>
 
       {/* HERO STATS */}
-      <div className="stagger-1" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16, marginBottom: 32 }}>
+      <div className="stagger-1 rg-4-2" style={{ gap: 16, marginBottom: 32 }}>
         {[
           { label: 'Total Habits', value: totalHabits },
           { label: 'Best Streak', value: bestStreak, suffix: ' days' },
@@ -243,7 +243,7 @@ export default function HabitsSection() {
       )}
 
       {/* HABIT CARDS */}
-      <div className="stagger-3" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+      <div className="stagger-3 rg-2" style={{ gap: 20 }}>
         {habits?.map(habit => {
           const logs = logsByHabit[habit.id!] ?? {};
           const streak = getStreak(habit.id!);

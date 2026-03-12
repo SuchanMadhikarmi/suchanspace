@@ -181,9 +181,9 @@ export default function JournalSection() {
   }
 
   return (
-    <div style={{ maxWidth: 920, margin: '0 auto', padding: '40px 32px' }}>
+    <div className="section-content" style={{ maxWidth: 920 }}>
       {/* Header */}
-      <div className="stagger-1" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 28 }}>
+      <div className="stagger-1 section-head" style={{ marginBottom: 28 }}>
         <div>
           <h1 className="font-serif" style={{ fontSize: 38, fontWeight: 700, color: 'var(--text)', marginBottom: 6 }}>Journal</h1>
           <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
@@ -212,7 +212,7 @@ export default function JournalSection() {
       </div>
 
       {view === 'editor' && (
-        <div className="stagger-2" style={{ display: 'grid', gridTemplateColumns: '1fr 280px', gap: 24 }}>
+        <div className="stagger-2 journal-editor-grid" style={{ gap: 24 }}>
           {/* Main editor */}
           <div>
             {/* Date header */}
@@ -519,7 +519,7 @@ export default function JournalSection() {
           </div>
 
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16 }}>
+          <div className="rg-3" style={{ gap: 16 }}>
             {[
               { label: 'Total Entries', value: allEntries?.length ?? 0 },
               { label: 'Writing Streak', value: writingStreak, suffix: ' days' },
