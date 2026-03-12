@@ -114,81 +114,8 @@ export async function seedSampleData() {
     updatedAt: format(subDays(today, 1), "yyyy-MM-dd'T'HH:mm:ss"),
   });
 
-  // Journal entries — last 5 days
-  const journalEntries = [
-    {
-      date: format(subDays(today, 4), 'yyyy-MM-dd'),
-      mood: 'excellent' as const,
-      energy: 5,
-      tags: ['focus', 'productivity', 'nepse'],
-      body: `Today felt like one of those rare days where everything aligned. Woke up at 5:30, meditated before my phone touched my hand. 
-
-The NEPSE analysis session in the morning was incredibly productive. Finally understood how to read the volume-price relationship in illiquid markets like ours. The key insight: in NEPSE, institutional behavior shows up differently than western markets — you have to look at broker-wise buying patterns.
-
-Three deep work blocks done. No major distractions. Made significant progress on the MLOps module 2 final project. The deployment pipeline is finally making sense.
-
-Evening: finished the book chapter on second-order thinking. This is becoming my mental model for everything — not just investing.`,
-      wordCount: 120,
-      createdAt: format(subDays(today, 4), "yyyy-MM-dd'T'HH:mm:ss"),
-      updatedAt: format(subDays(today, 4), "yyyy-MM-dd'T'HH:mm:ss"),
-    },
-    {
-      date: format(subDays(today, 3), 'yyyy-MM-dd'),
-      mood: 'good' as const,
-      energy: 4,
-      tags: ['learning', 'reflection'],
-      body: `Solid day, not spectacular. Got through the reading habit, skipped exercise (rationalized it as a rest day, which probably wasn't the right call).
-
-The MLOps material is getting harder — Kubernetes configurations are genuinely complex. Spent 2 hours on a pipeline issue that turned out to be a simple environment variable misconfiguration. Debugging is humbling.
-
-One interesting thing: had a conversation about the nature of learning. The insight that stuck with me — the goal isn't to "finish" the course, the goal is to change how I think about deploying ML. Are my mental models actually shifting? Testing this tomorrow by trying to explain a concept without notes.`,
-      wordCount: 105,
-      createdAt: format(subDays(today, 3), "yyyy-MM-dd'T'HH:mm:ss"),
-      updatedAt: format(subDays(today, 3), "yyyy-MM-dd'T'HH:mm:ss"),
-    },
-    {
-      date: format(subDays(today, 2), 'yyyy-MM-dd'),
-      mood: 'neutral' as const,
-      energy: 3,
-      tags: ['off-day', 'mindset'],
-      body: `Off day. These happen. The reading happened, meditation happened, but exercise was skipped again. Two days in a row — need to course correct tomorrow or this becomes a habit of avoiding.
-
-Work felt slow. Brain foggy in the afternoon. Two cups of coffee and still couldn't get into flow. Eventually gave up fighting it and went for a walk instead. That helped more than the coffee.
-
-Useful realization: I've been optimizing my mornings and completely neglecting my afternoons. My afternoon routine doesn't exist. That's the next thing to design.`,
-      wordCount: 88,
-      createdAt: format(subDays(today, 2), "yyyy-MM-dd'T'HH:mm:ss"),
-      updatedAt: format(subDays(today, 2), "yyyy-MM-dd'T'HH:mm:ss"),
-    },
-    {
-      date: format(subDays(today, 1), 'yyyy-MM-dd'),
-      mood: 'good' as const,
-      energy: 4,
-      tags: ['bounce-back', 'exercise', 'focus'],
-      body: `Bounce-back day. Sometimes you just have to decide the pattern stops now, not "eventually." Exercised in the morning — nothing dramatic, just 30 minutes. But the psychological effect was massive. All three habits done before 8 AM.
-
-Spent the morning on NEPSE mock portfolio review. Down 3% on paper — but more importantly, three of my thesis statements were wrong. Good. Better to learn this with fake money.
-
-Had a long conversation with a friend about goal-setting vs systems. He's chasing goals constantly and burning out. I'm starting to understand why Clear's "systems not goals" framing is more than a platitude.`,
-      wordCount: 110,
-      createdAt: format(subDays(today, 1), "yyyy-MM-dd'T'HH:mm:ss"),
-      updatedAt: format(subDays(today, 1), "yyyy-MM-dd'T'HH:mm:ss"),
-    },
-    {
-      date: todayStr,
-      mood: 'good' as const,
-      energy: 4,
-      tags: ['today', 'clarity'],
-      body: `Morning was crisp. All habits done. The air quality was good so did the run outside — different from the treadmill, more present.
-
-Planning session for the week ahead felt productive. This week's MIT: complete Module 3 of MLOps. Everything else is secondary.
-
-One thing I want to hold onto: the feeling of not being behind. Right now, at this moment, I'm on track. I want to remember this feeling when the inevitable friction comes.`,
-      wordCount: 75,
-      createdAt: todayStr + 'T08:30:00',
-      updatedAt: todayStr + 'T08:30:00',
-    },
-  ];
+  // Journal entries — none seeded, user writes their own
+  const journalEntries: object[] = [];
 
   for (const entry of journalEntries) {
     await db.journalEntries.add(entry);
