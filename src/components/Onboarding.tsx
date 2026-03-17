@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { db } from '../db/db';
-import { seedSampleData } from '../db/sampleData';
 import YearGrid from './common/YearGrid';
 
 const LIFE_AREAS = [
@@ -23,7 +22,6 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
   const [birthdate, setBirthdate] = useState('');
   const [lifeAreas, setLifeAreas] = useState<string[]>([]);
   const [firstHabit, setFirstHabit] = useState({ name: '', why: '', emoji: '⭐' });
-  const [useSampleData, setUseSampleData] = useState(true);
 
   const next = () => setStep(s => s + 1);
   const prev = () => setStep(s => s - 1);
@@ -33,9 +31,6 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
   };
 
   const finish = async () => {
-    if (useSampleData) {
-      await seedSampleData();
-    }
     await db.settings.put({ name_val: 'userName', value: name || 'Friend' });
     await db.settings.put({ name_val: 'birthdate', value: birthdate });
     await db.settings.put({ name_val: 'lifeAreas', value: lifeAreas.join(',') });
@@ -209,13 +204,6 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
                   </button>
                 ))}
               </div>
-            </div>
-            {/* Sample data toggle */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 14px', background: 'var(--highlight)', borderRadius: 10, marginBottom: 20, border: '1px solid var(--border)' }}>
-              <input type="checkbox" id="sampleData" checked={useSampleData} onChange={e => setUseSampleData(e.target.checked)} style={{ width: 16, height: 16, cursor: 'pointer' }} />
-              <label htmlFor="sampleData" style={{ fontSize: 13, color: 'var(--text)', fontFamily: "'DM Sans', sans-serif", cursor: 'pointer' }}>
-                Load sample data to explore the app (recommended for first-time users)
-              </label>
             </div>
             <div style={{ display: 'flex', gap: 12 }}>
               <button onClick={prev} className="btn btn-secondary">Back</button>

@@ -2,16 +2,20 @@ import { useState, useEffect } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from '../../db/db';
 import { useApp } from '../../context/AppContext';
-import { clearAllData, seedSampleData } from '../../db/sampleData';
+import { useAuth } from '../../context/AuthContext';
+import { clearAllData } from '../../db/sampleData';
 import { calculateLifePercentage } from '../../utils/dateUtils';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { format } from 'date-fns';
+import { getLastSync, pushUserBackup } from '../../services/cloudSync';
 
 export default function SettingsSection() {
   const { showToast } = useApp();
+  const { user, signOut } = useAuth();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [showSeedConfirm, setShowSeedConfirm] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [lastSync, setLastSync] = useState<string | null>(null);
   const [form, setForm] = useState({ userName: '', birthdate: '' });
 
   const allSettings = useLiveQuery(() => db.settings.toArray(), []);
@@ -27,6 +31,14 @@ export default function SettingsSection() {
       setForm({ userName: map.userName ?? '', birthdate: map.birthdate ?? '' });
     }
   }, [allSettings?.length]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setLastSync(null);
+      return;
+    }
+    setLastSync(getLastSync(user.id));
+  }, [user?.id]);
 
   const save = async () => {
     setSaving(true);
@@ -44,10 +56,30 @@ export default function SettingsSection() {
     setShowClearConfirm(false);
   };
 
-  const handleSeed = async () => {
-    await seedSampleData();
-    showToast('Sample data loaded!', 'success');
-    setShowSeedConfirm(false);
+  const handleSyncNow = async () => {
+    if (!user?.id) return;
+    setSyncing(true);
+    try {
+      await pushUserBackup(user.id);
+      const now = new Date().toISOString();
+      setLastSync(now);
+      showToast('Cloud sync completed.', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('Cloud sync failed. Check Supabase setup.', 'error');
+    } finally {
+      setSyncing(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      showToast('Signed out successfully.', 'success');
+    } catch (error) {
+      console.error(error);
+      showToast('Failed to sign out.', 'error');
+    }
   };
 
   return (
@@ -129,17 +161,41 @@ export default function SettingsSection() {
           ))}
         </div>
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
-          <button onClick={() => setShowSeedConfirm(true)} className="btn btn-secondary" style={{ fontSize: 13 }}>
-            Load Sample Data
-          </button>
           <button onClick={() => setShowClearConfirm(true)} className="btn btn-danger" style={{ fontSize: 13 }}>
             Clear All Data
           </button>
         </div>
       </div>
 
+      {/* Account & Cloud */}
+      <div className="stagger-4 card" style={{ padding: '24px', marginBottom: 20 }}>
+        <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 18, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'DM Sans', sans-serif" }}>
+          Account &amp; Cloud
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
+            <span style={{ color: 'var(--muted)' }}>Signed in as</span>
+            <span style={{ color: 'var(--text)', fontWeight: 600 }}>{user?.email ?? 'Unknown user'}</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
+            <span style={{ color: 'var(--muted)' }}>Last cloud sync</span>
+            <span style={{ color: 'var(--text)', fontWeight: 500 }}>{lastSync ? format(new Date(lastSync), 'PPpp') : 'Never'}</span>
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <button onClick={handleSyncNow} className="btn btn-secondary" disabled={syncing}>
+            {syncing ? 'Syncing...' : 'Sync Now'}
+          </button>
+          <button onClick={handleSignOut} className="btn btn-danger">
+            Sign Out
+          </button>
+        </div>
+      </div>
+
       {/* About */}
-      <div className="stagger-4 card" style={{ padding: '24px' }}>
+      <div className="stagger-5 card" style={{ padding: '24px' }}>
         <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', marginBottom: 18, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'DM Sans', sans-serif" }}>
           About
         </div>
@@ -166,15 +222,15 @@ export default function SettingsSection() {
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
             <span style={{ color: 'var(--muted)' }}>Data storage</span>
-            <span style={{ color: 'var(--text)', fontWeight: 500 }}>100% local · IndexedDB</span>
+            <span style={{ color: 'var(--text)', fontWeight: 500 }}>IndexedDB + Supabase Cloud Sync</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
             <span style={{ color: 'var(--muted)' }}>Built with</span>
-            <span style={{ color: 'var(--text)', fontWeight: 500 }}>React · Vite · Dexie.js</span>
+            <span style={{ color: 'var(--text)', fontWeight: 500 }}>React · Vite · Dexie.js · Supabase</span>
           </div>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>
             <span style={{ color: 'var(--muted)' }}>Privacy</span>
-            <span style={{ color: 'var(--sage)', fontWeight: 600 }}>Nothing leaves your device</span>
+            <span style={{ color: 'var(--sage)', fontWeight: 600 }}>Data stays tied to your account</span>
           </div>
         </div>
 
@@ -193,15 +249,6 @@ export default function SettingsSection() {
         message="This will permanently delete all your habits, goals, journal entries, tasks, and everything else. This cannot be undone."
         confirmLabel="Yes, Clear Everything"
         danger
-      />
-
-      <ConfirmDialog
-        isOpen={showSeedConfirm}
-        onClose={() => setShowSeedConfirm(false)}
-        onConfirm={handleSeed}
-        title="Load Sample Data"
-        message="This will add sample habits, goals, journal entries, and tasks to demonstrate the app. Your existing data will remain."
-        confirmLabel="Load Sample Data"
       />
     </div>
   );

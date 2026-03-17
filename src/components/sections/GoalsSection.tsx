@@ -465,7 +465,7 @@ export default function GoalsSection() {
             <input
               value={goalForm.title}
               onChange={e => setGoalForm(f => ({ ...f, title: e.target.value }))}
-              placeholder="e.g. Master NEPSE Analysis"
+              placeholder="e.g. Improve fitness consistency"
               autoFocus
               style={{ width: '100%', padding: '10px 14px', border: '1.5px solid var(--border)', borderRadius: 10, fontSize: 15, background: 'var(--bg)', color: 'var(--text)' }}
             />
