@@ -33,7 +33,7 @@ export default function Modal({ isOpen, onClose, title, children, width, size = 
         display: 'flex',
         alignItems: 'flex-end',
         justifyContent: 'center',
-        padding: '0 0 0 0',
+        padding: '0 8px env(safe-area-inset-bottom) 8px',
       }}
     >
       {/* Backdrop */}
@@ -57,6 +57,7 @@ export default function Modal({ isOpen, onClose, title, children, width, size = 
           padding: 0,
           width: '100%',
           maxWidth: w,
+          boxSizing: 'border-box',
           maxHeight: '90vh',
           display: 'flex',
           flexDirection: 'column',
@@ -111,6 +112,7 @@ export default function Modal({ isOpen, onClose, title, children, width, size = 
               display: 'flex',
               gap: 10,
               justifyContent: 'flex-end',
+              flexWrap: 'wrap',
               flexShrink: 0,
             }}
           >

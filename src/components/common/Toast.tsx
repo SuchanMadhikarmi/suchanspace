@@ -30,8 +30,7 @@ function ToastItem({ toast }: { toast: Toast }) {
         display: 'flex',
         alignItems: 'center',
         gap: 10,
-        minWidth: 260,
-        maxWidth: 380,
+        width: 'min(380px, calc(100vw - 32px))',
         boxShadow: '0 8px 32px rgba(0,0,0,0.24)',
         cursor: 'pointer',
       }}
@@ -55,10 +54,12 @@ export default function ToastContainer() {
     <div
       style={{
         position: 'fixed',
-        bottom: 24,
-        right: 24,
+        bottom: 'calc(16px + env(safe-area-inset-bottom))',
+        right: 16,
+        left: 16,
         display: 'flex',
         flexDirection: 'column',
+        alignItems: 'flex-end',
         gap: 10,
         zIndex: 9998,
       }}

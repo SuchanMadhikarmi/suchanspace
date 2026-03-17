@@ -117,7 +117,7 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
             placeholder="Add a task... (Enter to add)"
             style={{
               flex: 1,
-              minWidth: 200,
+              minWidth: 120,
               padding: '9px 14px',
               border: '1.5px solid var(--border)',
               borderRadius: 10,
