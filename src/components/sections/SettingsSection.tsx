@@ -8,6 +8,7 @@ import { calculateLifePercentage } from '../../utils/dateUtils';
 import ConfirmDialog from '../common/ConfirmDialog';
 import { format } from 'date-fns';
 import { getLastSync, pushUserBackup } from '../../services/cloudSync';
+import { isCurrentUserAdmin, listAccessRequests, setAccessRequestStatus, type AccessRequestRow } from '../../services/accessApproval';
 
 export default function SettingsSection() {
   const { showToast } = useApp();
@@ -16,6 +17,9 @@ export default function SettingsSection() {
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSync, setLastSync] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [adminLoading, setAdminLoading] = useState(false);
+  const [pendingRequests, setPendingRequests] = useState<AccessRequestRow[]>([]);
   const [form, setForm] = useState({ userName: '', birthdate: '' });
 
   const allSettings = useLiveQuery(() => db.settings.toArray(), []);
@@ -38,6 +42,27 @@ export default function SettingsSection() {
       return;
     }
     setLastSync(getLastSync(user.id));
+  }, [user?.id]);
+
+  const loadPendingRequests = async () => {
+    if (!user?.id) return;
+    setAdminLoading(true);
+    try {
+      const admin = await isCurrentUserAdmin(user.id);
+      setIsAdmin(admin);
+      if (!admin) {
+        setPendingRequests([]);
+        return;
+      }
+      const pending = await listAccessRequests('pending');
+      setPendingRequests(pending);
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadPendingRequests();
   }, [user?.id]);
 
   const save = async () => {
@@ -79,6 +104,16 @@ export default function SettingsSection() {
     } catch (error) {
       console.error(error);
       showToast('Failed to sign out.', 'error');
+    }
+  };
+
+  const handleDecision = async (requestUserId: string, status: 'approved' | 'denied') => {
+    const ok = await setAccessRequestStatus(requestUserId, status);
+    if (ok) {
+      showToast(status === 'approved' ? 'User approved.' : 'User denied.', 'success');
+      await loadPendingRequests();
+    } else {
+      showToast('Failed to update request.', 'error');
     }
   };
 
@@ -240,6 +275,46 @@ export default function SettingsSection() {
           </div>
         </div>
       </div>
+
+      {isAdmin && (
+        <div className="stagger-5 card" style={{ padding: '24px', marginTop: 20 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'DM Sans', sans-serif" }}>
+              Admin · Account Approvals
+            </div>
+            <button onClick={loadPendingRequests} className="btn btn-secondary" style={{ fontSize: 12, padding: '6px 10px' }}>
+              Refresh
+            </button>
+          </div>
+
+          {adminLoading ? (
+            <div style={{ color: 'var(--muted)', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>Loading requests...</div>
+          ) : pendingRequests.length === 0 ? (
+            <div style={{ color: 'var(--muted)', fontSize: 13, fontFamily: "'DM Sans', sans-serif" }}>No pending requests.</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {pendingRequests.map(req => (
+                <div key={req.user_id} style={{ border: '1px solid var(--border)', borderRadius: 10, padding: '12px' }}>
+                  <div style={{ fontSize: 13, color: 'var(--text)', fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>
+                    <strong>{req.email ?? 'Unknown email'}</strong>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'var(--muted)', fontFamily: "'DM Sans', sans-serif", marginBottom: 10 }}>
+                    Requested: {format(new Date(req.requested_at), 'PPpp')}
+                  </div>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <button onClick={() => handleDecision(req.user_id, 'approved')} className="btn btn-primary" style={{ fontSize: 12, padding: '6px 10px' }}>
+                      Approve
+                    </button>
+                    <button onClick={() => handleDecision(req.user_id, 'denied')} className="btn btn-danger" style={{ fontSize: 12, padding: '6px 10px' }}>
+                      Deny
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       <ConfirmDialog
         isOpen={showClearConfirm}
