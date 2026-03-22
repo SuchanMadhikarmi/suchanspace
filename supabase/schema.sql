@@ -107,7 +107,27 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+declare
+  has_admin boolean;
 begin
+  select exists(select 1 from public.admin_users) into has_admin;
+
+  if not has_admin then
+    insert into public.admin_users (user_id)
+    values (new.id)
+    on conflict (user_id) do nothing;
+
+    insert into public.user_access_requests (user_id, email, status, decided_at, note)
+    values (new.id, new.email, 'approved', now(), 'auto-approved as bootstrap admin')
+    on conflict (user_id) do update
+      set status = excluded.status,
+          decided_at = excluded.decided_at,
+          note = excluded.note,
+          email = coalesce(public.user_access_requests.email, excluded.email);
+
+    return new;
+  end if;
+
   insert into public.user_access_requests (user_id, email, status)
   values (new.id, new.email, 'pending')
   on conflict (user_id) do nothing;

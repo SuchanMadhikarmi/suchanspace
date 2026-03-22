@@ -54,6 +54,7 @@ This project supports a manual approval gate:
 - New accounts are inserted into `public.user_access_requests` with status `pending`.
 - While `pending` or `denied`, the app blocks access to main sections.
 - Only `approved` users can proceed and sync data.
+- Bootstrap rule: when there are no rows in `public.admin_users`, the next signed-up user is auto-added to `admin_users` and auto-approved.
 
 ### Approve a user
 
@@ -102,3 +103,12 @@ on conflict (user_id) do nothing;
 
 After that, sign in with that account and open **Settings**.
 You can approve or deny pending users directly from the app UI.
+
+### Reset all users safely (fresh start)
+
+If you delete all users from `auth.users`, related rows in `admin_users` and `user_access_requests` are removed via cascade.
+After that, create one new account from the app sign-up screen:
+
+- That first account becomes admin automatically.
+- That account is auto-approved and can access the app immediately.
+- You can then approve/deny any later users from **Settings**.

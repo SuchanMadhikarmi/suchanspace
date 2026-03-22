@@ -1,6 +1,24 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 
+function getFriendlyAuthError(rawError: unknown, mode: 'signin' | 'signup') {
+  const fallback = 'Authentication failed.';
+  const message = rawError instanceof Error ? rawError.message : fallback;
+  const normalized = message.toLowerCase();
+
+  if (normalized.includes('email rate limit exceeded') || normalized.includes('rate limit')) {
+    return mode === 'signup'
+      ? 'Too many signup email requests. Wait a bit, or in Supabase disable email confirmation for development and try again.'
+      : 'Too many auth attempts right now. Please wait a moment and try signing in again.';
+  }
+
+  if (mode === 'signup' && normalized.includes('already registered')) {
+    return 'This email is already registered. Switch to Sign In.';
+  }
+
+  return message;
+}
+
 export default function AuthScreen() {
   const { signIn, signUp } = useAuth();
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -24,7 +42,7 @@ export default function AuthScreen() {
         setMessage('Account created. Check email for verification if required, then sign in.');
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Authentication failed.');
+      setError(getFriendlyAuthError(err, mode));
     } finally {
       setLoading(false);
     }
