@@ -113,7 +113,7 @@ export default function HabitsSection() {
     await db.habits.add({
       ...form,
       createdAt: new Date().toISOString(),
-      archived: false,
+      archived: 0,
     });
     setAddOpen(false);
     setStep(1);
@@ -122,7 +122,7 @@ export default function HabitsSection() {
   };
 
   const handleArchive = async (id: number) => {
-    await db.habits.update(id, { archived: true });
+    await db.habits.update(id, { archived: 1 });
     showToast('Habit archived', 'info');
   };
 

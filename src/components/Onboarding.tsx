@@ -46,7 +46,7 @@ export default function Onboarding({ onComplete }: { onComplete: () => void }) {
         color: '#1A3C2E',
         category: 'health',
         createdAt: new Date().toISOString(),
-        archived: false,
+        archived: 0,
       });
     }
     onComplete();

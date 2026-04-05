@@ -56,7 +56,7 @@ export interface Habit {
   emoji: string;
   linkedGoalId?: number;
   createdAt: string;
-  archived: boolean;
+  archived: 0 | 1;
 }
 
 export interface HabitLog {
@@ -252,6 +252,12 @@ class ProductivityDB extends Dexie {
       weeklyReviews: '++id, weekStart, weekStartDate, weekNumber',
       learningTracks: '++id, status, category, name',
       learningSessions: '++id, trackId, date',
+    });
+    this.version(3).upgrade(async tx => {
+      await tx.table('habits').toCollection().modify((habit: { archived?: boolean | number | null }) => {
+        if (habit.archived === true) habit.archived = 1;
+        else if (habit.archived === false || habit.archived == null) habit.archived = 0;
+      });
     });
   }
 }
