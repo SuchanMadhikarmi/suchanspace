@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { format } from 'date-fns';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db } from '../../db/db';
+import { db, type DailyEntry } from '../../db/db';
 import {
   getGreeting, getDailyQuote, formatDateBeautiful, isEveningTime,
   calculateDailyScore, getDayOfYear, getYearProgress, getDaysRemainingInYear, formatBSDate,
@@ -15,9 +15,26 @@ import { ChevronDown, ChevronUp } from 'lucide-react';
 
 const ENERGY_COLORS = ['#E5DDD5', '#7BAD7B', '#D97706', '#C4622D', '#1A3C2E'];
 
+const EMPTY_DAILY_ENTRY_FIELDS: Pick<DailyEntry,
+  'morningMIT' | 'morningBlocker' | 'morningGratitude' |
+  'morningEnergy' | 'eveningReflection' | 'eveningEnergy' |
+  'eveningWentWell' | 'eveningTomorrow' | 'mitCompleted'
+> = {
+  morningMIT: '',
+  morningBlocker: '',
+  morningGratitude: '',
+  morningEnergy: 3,
+  eveningReflection: '',
+  eveningEnergy: 3,
+  eveningWentWell: '',
+  eveningTomorrow: '',
+  mitCompleted: '',
+};
+
 export default function TodaySection() {
   const today = format(new Date(), 'yyyy-MM-dd');
   const [showYearGrid, setShowYearGrid] = useState(false);
+  const [entryDraft, setEntryDraft] = useState(EMPTY_DAILY_ENTRY_FIELDS);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   const settings = useLiveQuery(() => db.settings.toArray());
@@ -43,10 +60,28 @@ export default function TodaySection() {
   const journaled = !!journalEntry;
   const focusCount = focusSessions?.length ?? 0;
 
+  useEffect(() => {
+    if (dailyEntry) {
+      setEntryDraft({
+        morningMIT: dailyEntry.morningMIT ?? '',
+        morningBlocker: dailyEntry.morningBlocker ?? '',
+        morningGratitude: dailyEntry.morningGratitude ?? '',
+        morningEnergy: dailyEntry.morningEnergy ?? 3,
+        eveningReflection: dailyEntry.eveningReflection ?? '',
+        eveningEnergy: dailyEntry.eveningEnergy ?? 3,
+        eveningWentWell: dailyEntry.eveningWentWell ?? '',
+        eveningTomorrow: dailyEntry.eveningTomorrow ?? '',
+        mitCompleted: dailyEntry.mitCompleted ?? '',
+      });
+      return;
+    }
+    setEntryDraft(EMPTY_DAILY_ENTRY_FIELDS);
+  }, [dailyEntry?.id, today]);
+
   const dailyScore = calculateDailyScore({
     habitsCompleted: completedHabits,
     totalHabits,
-    mitCompleted: (dailyEntry?.mitCompleted) || '',
+    mitCompleted: entryDraft.mitCompleted || '',
     tasksCompleted: completedTasks,
     totalTasks,
     journaled,
@@ -87,6 +122,11 @@ export default function TodaySection() {
   useEffect(() => {
     return () => { if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current); };
   }, []);
+
+  const updateEntry = (updates: Partial<DailyEntry>) => {
+    setEntryDraft(prev => ({ ...prev, ...updates }));
+    void saveEntry(updates);
+  };
 
   const dayOfYear = getDayOfYear(new Date());
   const daysRemaining = getDaysRemainingInYear(new Date());
@@ -170,13 +210,13 @@ export default function TodaySection() {
             {[1,2,3,4,5].map(dot => (
               <button
                 key={dot}
-                onClick={() => saveEntry({ morningEnergy: dot })}
+                onClick={() => updateEntry({ morningEnergy: dot })}
                 style={{
                   width: 28,
                   height: 28,
                   borderRadius: '50%',
-                  background: (dailyEntry?.morningEnergy ?? 3) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--bg)',
-                  border: `2px solid ${(dailyEntry?.morningEnergy ?? 3) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--border)'}`,
+                  background: (entryDraft.morningEnergy ?? 3) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--bg)',
+                  border: `2px solid ${(entryDraft.morningEnergy ?? 3) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--border)'}`,
                   cursor: 'pointer',
                   transition: 'all 150ms ease',
                 }}
@@ -211,8 +251,8 @@ export default function TodaySection() {
               What is the ONE thing that would make today a success?
             </label>
             <textarea
-              value={dailyEntry?.morningMIT ?? ''}
-              onChange={e => saveEntry({ morningMIT: e.target.value })}
+              value={entryDraft.morningMIT}
+              onChange={e => updateEntry({ morningMIT: e.target.value })}
               placeholder="My most important intention for today..."
               rows={2}
               style={{
@@ -235,8 +275,8 @@ export default function TodaySection() {
                 What might get in my way?
               </label>
               <input
-                value={dailyEntry?.morningBlocker ?? ''}
-                onChange={e => saveEntry({ morningBlocker: e.target.value })}
+                value={entryDraft.morningBlocker}
+                onChange={e => updateEntry({ morningBlocker: e.target.value })}
                 placeholder="Potential obstacles..."
                 style={{
                   width: '100%',
@@ -254,8 +294,8 @@ export default function TodaySection() {
                 I am grateful for:
               </label>
               <input
-                value={dailyEntry?.morningGratitude ?? ''}
-                onChange={e => saveEntry({ morningGratitude: e.target.value })}
+                value={entryDraft.morningGratitude}
+                onChange={e => updateEntry({ morningGratitude: e.target.value })}
                 placeholder="Three things today..."
                 style={{
                   width: '100%',
@@ -273,7 +313,7 @@ export default function TodaySection() {
       </div>
 
       {/* MIT HERO (if set) */}
-      {dailyEntry?.morningMIT && (
+      {entryDraft.morningMIT && (
         <div
           className="stagger-3"
           style={{
@@ -303,13 +343,13 @@ export default function TodaySection() {
             className="font-serif"
             style={{ fontSize: 26, fontWeight: 600, color: 'white', lineHeight: 1.3, marginBottom: 16 }}
           >
-            {dailyEntry.morningMIT}
+            {entryDraft.morningMIT}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
             {(['yes', 'partial', 'no'] as const).map(status => (
               <button
                 key={status}
-                onClick={() => saveEntry({ mitCompleted: status })}
+                onClick={() => updateEntry({ mitCompleted: status })}
                 style={{
                   padding: '8px 16px',
                   borderRadius: 8,
@@ -318,8 +358,8 @@ export default function TodaySection() {
                   fontSize: 13,
                   fontWeight: 600,
                   fontFamily: "'DM Sans', sans-serif",
-                  background: dailyEntry.mitCompleted === status ? 'white' : 'rgba(255,255,255,0.12)',
-                  color: dailyEntry.mitCompleted === status ? 'var(--green)' : 'rgba(255,255,255,0.8)',
+                  background: entryDraft.mitCompleted === status ? 'white' : 'rgba(255,255,255,0.12)',
+                  color: entryDraft.mitCompleted === status ? 'var(--green)' : 'rgba(255,255,255,0.8)',
                   transition: 'all 150ms ease',
                 }}
               >
@@ -365,7 +405,7 @@ export default function TodaySection() {
       </div>
 
       {/* EVENING REFLECTION */}
-      {(isEvening || dailyEntry?.eveningReflection) && (
+      {(isEvening || entryDraft.eveningReflection) && (
         <div className="card stagger-5" style={{ padding: '24px', marginBottom: 24, background: 'var(--highlight)' }}>
           <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', marginBottom: 16, textTransform: 'uppercase', letterSpacing: '0.06em', fontFamily: "'DM Sans', sans-serif" }}>
             Evening Reflection 🌙
@@ -376,8 +416,8 @@ export default function TodaySection() {
                 What went well today?
               </label>
               <textarea
-                value={dailyEntry?.eveningWentWell ?? ''}
-                onChange={e => saveEntry({ eveningWentWell: e.target.value })}
+                value={entryDraft.eveningWentWell}
+                onChange={e => updateEntry({ eveningWentWell: e.target.value })}
                 placeholder="Wins, moments of flow, good decisions..."
                 rows={2}
                 style={{
@@ -399,8 +439,8 @@ export default function TodaySection() {
                 What will tomorrow-you thank today-you for doing?
               </label>
               <input
-                value={dailyEntry?.eveningTomorrow ?? ''}
-                onChange={e => saveEntry({ eveningTomorrow: e.target.value })}
+                value={entryDraft.eveningTomorrow}
+                onChange={e => updateEntry({ eveningTomorrow: e.target.value })}
                 placeholder="One action that compounds positively..."
                 style={{
                   width: '100%',
@@ -421,13 +461,13 @@ export default function TodaySection() {
                 {[1,2,3,4,5].map(dot => (
                   <button
                     key={dot}
-                    onClick={() => saveEntry({ eveningEnergy: dot })}
+                      onClick={() => updateEntry({ eveningEnergy: dot })}
                     style={{
                       width: 28,
                       height: 28,
                       borderRadius: '50%',
-                      background: (dailyEntry?.eveningEnergy ?? 0) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--bg)',
-                      border: `2px solid ${(dailyEntry?.eveningEnergy ?? 0) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--border)'}`,
+                      background: (entryDraft.eveningEnergy ?? 0) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--bg)',
+                      border: `2px solid ${(entryDraft.eveningEnergy ?? 0) >= dot ? ENERGY_COLORS[dot - 1] : 'var(--border)'}`,
                       cursor: 'pointer',
                       transition: 'all 150ms ease',
                     }}
