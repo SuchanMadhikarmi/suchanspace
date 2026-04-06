@@ -6,6 +6,13 @@ import { useApp } from '../../../context/AppContext';
 const WORK_DURATION = 25 * 60; // 25 min in seconds
 const BREAK_DURATION = 5 * 60; // 5 min in seconds
 
+const sendNotification = (title: string, body?: string) => {
+  if (!('Notification' in window)) return;
+  if (Notification.permission === 'granted') {
+    new Notification(title, { body });
+  }
+};
+
 interface FocusTimerProps {
   date?: string;
   sessionCount?: number;
@@ -43,10 +50,12 @@ export default function FocusTimer({ date, sessionCount = 0, darkMode = false }:
         createdAt: new Date().toISOString(),
       });
       showToast('🎉 Focus session complete! Take a 5-min break.', 'success');
+      sendNotification('🎉 Focus complete!', 'Time for a 5-min break.');
       setMode('break');
       setTimeLeft(BREAK_DURATION);
     } else {
       showToast('Break over — back to work!', 'info');
+      sendNotification('⏰ Break over!', 'Time to get back to work.');
       setMode('work');
       setTimeLeft(WORK_DURATION);
     }
@@ -78,6 +87,22 @@ export default function FocusTimer({ date, sessionCount = 0, darkMode = false }:
     const next = mode === 'work' ? 'break' : 'work';
     setMode(next);
     setTimeLeft(next === 'work' ? WORK_DURATION : BREAK_DURATION);
+  };
+
+  const toggleTimer = async () => {
+    if (!running && 'Notification' in window && Notification.permission === 'default') {
+      await Notification.requestPermission();
+    }
+    
+    const nextRunning = !running;
+    setRunning(nextRunning);
+    
+    if (nextRunning) {
+      sendNotification(
+        mode === 'work' ? '🚀 Focus Started' : '☕ Break Started', 
+        mode === 'work' ? 'Time to focus for 25 minutes!' : 'Take a 5 minute break.'
+      );
+    }
   };
 
   const color = mode === 'work'
@@ -132,7 +157,7 @@ export default function FocusTimer({ date, sessionCount = 0, darkMode = false }:
         <div style={{ display: 'flex', gap: 8 }}>
           <button
             className="btn btn-primary"
-            onClick={() => setRunning(r => !r)}
+            onClick={toggleTimer}
             style={{ padding: '10px 20px', gap: 6 }}
           >
             {running ? <Pause size={15} /> : <Play size={15} />}
