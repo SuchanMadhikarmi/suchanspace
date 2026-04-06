@@ -136,31 +136,62 @@ export async function pullUserBackup(userId: string): Promise<BackupPayload | nu
   return data.payload;
 }
 
-export async function syncFromCloudToLocal(userId: string): Promise<'restored' | 'empty'> {
-  const backup = await pullUserBackup(userId);
+export async function syncFromCloudToLocal(userId: string): Promise<'restored' | 'empty' | 'pushed_local'> {
+  if (!supabase) throw new Error('Supabase is not configured.');
+
+  const { data, error } = await supabase
+    .from('user_backups')
+    .select('payload, updated_at')
+    .eq('user_id', userId)
+    .maybeSingle<BackupRow>();
+
+  if (error) throw error;
+  
+  const lastSync = getLastSync(userId);
+  
+  // If cloud data exists and we have a sync history, check if cloud is actually newer
+  if (data?.updated_at && lastSync) {
+    const cloudTime = new Date(data.updated_at).getTime();
+    const localTime = new Date(lastSync).getTime();
+    
+    // If the cloud hasn't been updated since our last sync, we likely have local changes
+    // that failed to push. Instead of overwriting local data, let's push it!
+    if (cloudTime <= localTime) {
+      await pushUserBackup(userId);
+      return 'pushed_local';
+    }
+  }
+
+  const backup = data?.payload;
   if (!backup) {
-    await clearLocalData();
+    if (!lastSync) {
+      await clearLocalData();
+    }
     return 'empty';
   }
 
-  const { data } = backup;
+  if (data.updated_at) {
+    setLastSync(userId, data.updated_at);
+  }
+
+  const payloadData = backup.data;
   await clearLocalData();
 
-  if (data.dailyEntries.length) await db.dailyEntries.bulkPut(data.dailyEntries as never[]);
-  if (data.tasks.length) await db.tasks.bulkPut(data.tasks as never[]);
-  if (data.habits.length) await db.habits.bulkPut(data.habits as never[]);
-  if (data.habitLogs.length) await db.habitLogs.bulkPut(data.habitLogs as never[]);
-  if (data.goals.length) await db.goals.bulkPut(data.goals as never[]);
-  if (data.projects.length) await db.projects.bulkPut(data.projects as never[]);
-  if (data.projectTasks.length) await db.projectTasks.bulkPut(data.projectTasks as never[]);
-  if (data.journalEntries.length) await db.journalEntries.bulkPut(data.journalEntries as never[]);
-  if (data.weeklyReviews.length) await db.weeklyReviews.bulkPut(data.weeklyReviews as never[]);
-  if (data.learningSessions.length) await db.learningSessions.bulkPut(data.learningSessions as never[]);
-  if (data.learningTracks.length) await db.learningTracks.bulkPut(data.learningTracks as never[]);
-  if (data.focusSessions.length) await db.focusSessions.bulkPut(data.focusSessions as never[]);
-  if (data.monthlyLetters.length) await db.monthlyLetters.bulkPut(data.monthlyLetters as never[]);
-  if (data.annualLetters.length) await db.annualLetters.bulkPut(data.annualLetters as never[]);
-  if (data.settings.length) await db.settings.bulkPut(data.settings as never[]);
+  if (payloadData.dailyEntries.length) await db.dailyEntries.bulkPut(payloadData.dailyEntries as never[]);
+  if (payloadData.tasks.length) await db.tasks.bulkPut(payloadData.tasks as never[]);
+  if (payloadData.habits.length) await db.habits.bulkPut(payloadData.habits as never[]);
+  if (payloadData.habitLogs.length) await db.habitLogs.bulkPut(payloadData.habitLogs as never[]);
+  if (payloadData.goals.length) await db.goals.bulkPut(payloadData.goals as never[]);
+  if (payloadData.projects.length) await db.projects.bulkPut(payloadData.projects as never[]);
+  if (payloadData.projectTasks.length) await db.projectTasks.bulkPut(payloadData.projectTasks as never[]);
+  if (payloadData.journalEntries.length) await db.journalEntries.bulkPut(payloadData.journalEntries as never[]);
+  if (payloadData.weeklyReviews.length) await db.weeklyReviews.bulkPut(payloadData.weeklyReviews as never[]);
+  if (payloadData.learningSessions.length) await db.learningSessions.bulkPut(payloadData.learningSessions as never[]);
+  if (payloadData.learningTracks.length) await db.learningTracks.bulkPut(payloadData.learningTracks as never[]);
+  if (payloadData.focusSessions.length) await db.focusSessions.bulkPut(payloadData.focusSessions as never[]);
+  if (payloadData.monthlyLetters.length) await db.monthlyLetters.bulkPut(payloadData.monthlyLetters as never[]);
+  if (payloadData.annualLetters.length) await db.annualLetters.bulkPut(payloadData.annualLetters as never[]);
+  if (payloadData.settings.length) await db.settings.bulkPut(payloadData.settings as never[]);
 
   return 'restored';
 }
