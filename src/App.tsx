@@ -151,13 +151,21 @@ function App() {
       pushUserBackup(session.user.id).catch(() => undefined)
     }
 
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        pushUserBackup(session.user.id).catch(() => undefined)
+      }
+    }
+
     window.addEventListener('beforeunload', handleBeforeUnload)
+    document.addEventListener('visibilitychange', handleVisibilityChange)
 
     return () => {
       pushUserBackup(session.user.id).catch(() => undefined)
       canceled = true
       clearInterval(syncTimer)
       window.removeEventListener('beforeunload', handleBeforeUnload)
+      document.removeEventListener('visibilitychange', handleVisibilityChange)
     }
   }, [session?.user?.id, accessStatus, isAdmin])
 
