@@ -1,8 +1,11 @@
-import { Sunrise, Flame, Target, BookOpen, Calendar, BookMarked, Settings } from 'lucide-react';
+import { Sunrise, Flame, Target, BookOpen, Calendar, BookMarked, Settings, LayoutDashboard, CalendarDays, FileText } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 
 const NAV_ITEMS = [
+  { id: 'dashboard',icon: LayoutDashboard, label: 'Dash'   },
   { id: 'today',    icon: Sunrise,    label: 'Today'    },
+  { id: 'calendar', icon: CalendarDays, label: 'Calendar' },
+  { id: 'notes',    icon: FileText,   label: 'Notes'    },
   { id: 'habits',   icon: Flame,      label: 'Habits'   },
   { id: 'goals',    icon: Target,     label: 'Goals'    },
   { id: 'journal',  icon: BookOpen,   label: 'Journal'  },

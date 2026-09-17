@@ -5,6 +5,22 @@ import { Plus, Trash2, GripVertical, Clock, ChevronDown, ChevronUp, RotateCcw } 
 import { useApp } from '../../../context/AppContext';
 import { getPriorityColor } from '../../../utils/dateUtils';
 import ConfirmDialog from '../../common/ConfirmDialog';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+  useSortable,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface TaskListProps {
   date: string;
@@ -18,8 +34,6 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
   const [newMinutes, setNewMinutes] = useState('');
   const [showCompleted, setShowCompleted] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null);
-  const [dragOver, setDragOver] = useState<number | null>(null);
-  const dragTask = useRef<number | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const tasks = useLiveQuery(
@@ -29,6 +43,13 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
 
   const pending = tasks?.filter(t => !t.completed) ?? [];
   const completed = tasks?.filter(t => t.completed) ?? [];
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
 
   const handleAdd = async () => {
     const title = newTask.trim();
@@ -68,19 +89,20 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
     await db.tasks.update(task.id, { priority });
   };
 
-  // Drag & Drop
-  const handleDragStart = (taskId: number) => { dragTask.current = taskId; };
-  const handleDrop = async (targetId: number) => {
-    if (!dragTask.current || dragTask.current === targetId) return;
-    const sourceTask = tasks?.find(t => t.id === dragTask.current);
-    const targetTask = tasks?.find(t => t.id === targetId);
-    if (!sourceTask?.id || !targetTask?.id) return;
-    const srcOrder = sourceTask.sortOrder ?? 0;
-    const tgtOrder = targetTask.sortOrder ?? 0;
-    await db.tasks.update(sourceTask.id, { sortOrder: tgtOrder });
-    await db.tasks.update(targetTask.id, { sortOrder: srcOrder });
-    setDragOver(null);
-    dragTask.current = null;
+  const handleDragEnd = async (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    
+    const activeTask = pending.find(t => t.id === active.id);
+    const overTask = pending.find(t => t.id === over.id);
+    
+    if (activeTask?.id && overTask?.id) {
+      const activeOrder = activeTask.sortOrder ?? 0;
+      const overOrder = overTask.sortOrder ?? 0;
+      
+      await db.tasks.update(activeTask.id, { sortOrder: overOrder });
+      await db.tasks.update(overTask.id, { sortOrder: activeOrder });
+    }
   };
 
   return (
@@ -88,7 +110,6 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
       {/* Add task input */}
       {!compact && (
         <div style={{ display: 'flex', gap: 8, marginBottom: 16, alignItems: 'center', flexWrap: 'wrap' }}>
-          {/* Priority dot */}
           <div style={{ display: 'flex', gap: 4 }}>
             {(['high', 'medium', 'low'] as Priority[]).map(p => (
               <button
@@ -165,22 +186,27 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
             No pending tasks. Add one above or enjoy a clear day ✨
           </div>
         )}
-        {pending.map(task => (
-          <TaskRow
-            key={task.id}
-            task={task}
-            onToggle={() => handleToggle(task)}
-            onDelete={() => setConfirmDelete(task.id!)}
-            onPriorityChange={(p) => handlePriorityChange(task, p)}
-            dragging={false}
-            dragOver={dragOver === task.id}
-            onDragStart={() => handleDragStart(task.id!)}
-            onDragOver={() => setDragOver(task.id!)}
-            onDrop={() => handleDrop(task.id!)}
-            onDragEnd={() => { setDragOver(null); dragTask.current = null; }}
-            compact={compact}
-          />
-        ))}
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={pending.map(t => t.id!)}
+            strategy={verticalListSortingStrategy}
+          >
+            {pending.map(task => (
+              <SortableTaskRow
+                key={task.id}
+                task={task}
+                onToggle={() => handleToggle(task)}
+                onDelete={() => setConfirmDelete(task.id!)}
+                onPriorityChange={(p) => handlePriorityChange(task, p)}
+                compact={compact}
+              />
+            ))}
+          </SortableContext>
+        </DndContext>
       </div>
 
       {/* Completed tasks toggle */}
@@ -201,25 +227,19 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
               marginBottom: 8,
             }}
           >
-            {showCompleted ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            {completed.length} completed
+            {showCompleted ? <ChevronUp size={14} /> : <ChevronDown size={14} />} {completed.length} completed
           </button>
           {showCompleted && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, opacity: 0.7 }}>
               {completed.map(task => (
-                <TaskRow
+                <SortableTaskRow
                   key={task.id}
                   task={task}
                   onToggle={() => handleToggle(task)}
                   onDelete={() => setConfirmDelete(task.id!)}
                   onPriorityChange={(p) => handlePriorityChange(task, p)}
-                  dragging={false}
-                  dragOver={false}
-                  onDragStart={() => {}}
-                  onDragOver={() => {}}
-                  onDrop={() => {}}
-                  onDragEnd={() => {}}
                   compact={compact}
+                  disabled={true}
                 />
               ))}
             </div>
@@ -240,46 +260,57 @@ export default function TaskList({ date, compact = false }: TaskListProps) {
   );
 }
 
-interface TaskRowProps {
+interface SortableTaskRowProps {
   task: Task;
   onToggle: () => void;
   onDelete: () => void;
   onPriorityChange: (p: Priority) => void;
-  dragging: boolean;
-  dragOver: boolean;
-  onDragStart: () => void;
-  onDragOver: () => void;
-  onDrop: () => void;
-  onDragEnd: () => void;
   compact: boolean;
+  disabled?: boolean;
 }
 
-function TaskRow({ task, onToggle, onDelete, onPriorityChange, dragOver, onDragStart, onDragOver, onDrop, onDragEnd, compact }: TaskRowProps) {
+function SortableTaskRow({ task, onToggle, onDelete, onPriorityChange, compact, disabled }: SortableTaskRowProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: task.id!, disabled });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 100 : 1,
+    opacity: isDragging ? 0.8 : 1,
+    boxShadow: isDragging ? 'var(--shadow-lg)' : 'none',
+  };
+
   const [showPriority, setShowPriority] = useState(false);
 
   return (
     <div
-      draggable
-      onDragStart={onDragStart}
-      onDragOver={(e) => { e.preventDefault(); onDragOver(); }}
-      onDrop={(e) => { e.preventDefault(); onDrop(); }}
-      onDragEnd={onDragEnd}
+      ref={setNodeRef}
       style={{
         display: 'flex',
         alignItems: 'center',
         gap: 10,
         padding: compact ? '8px 12px' : '10px 14px',
-        background: dragOver ? 'var(--highlight)' : 'var(--bg)',
-        border: dragOver ? '1.5px dashed var(--green)' : '1.5px solid var(--border)',
+        background: isDragging ? 'var(--highlight)' : 'var(--bg)',
+        border: isDragging ? '1.5px dashed var(--green)' : '1.5px solid var(--border)',
         borderRadius: 10,
-        transition: 'all 150ms ease',
-        cursor: 'default',
+        cursor: disabled ? 'default' : 'initial',
+        ...style,
       }}
     >
-      {!compact && (
-        <div style={{ cursor: 'grab', color: 'var(--border)', flexShrink: 0 }}>
+      {!compact && !disabled && (
+        <div style={{ cursor: 'grab', color: 'var(--border)', flexShrink: 0 }} {...attributes} {...listeners}>
           <GripVertical size={14} />
         </div>
+      )}
+      {!compact && disabled && (
+        <div style={{ width: 14 }}></div>
       )}
 
       {/* Checkbox */}
@@ -339,18 +370,18 @@ function TaskRow({ task, onToggle, onDelete, onPriorityChange, dragOver, onDragS
       {/* Priority indicator */}
       <div style={{ position: 'relative', flexShrink: 0 }}>
         <button
-          onClick={() => setShowPriority(s => !s)}
+          onClick={() => !disabled && setShowPriority(s => !s)}
           style={{
             width: 10,
             height: 10,
             borderRadius: '50%',
             background: getPriorityColor(task.priority),
             border: 'none',
-            cursor: 'pointer',
+            cursor: disabled ? 'default' : 'pointer',
           }}
           title={`Priority: ${task.priority}`}
         />
-        {showPriority && (
+        {showPriority && !disabled && (
           <div
             style={{
               position: 'absolute',

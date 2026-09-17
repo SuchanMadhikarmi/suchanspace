@@ -125,7 +125,7 @@ export default function LearningSection() {
   const TRACK_COLORS = ['#1A3C2E', '#C4622D', '#4A7C59', '#D97706', '#7B5EA7', '#1E6F8E'];
 
   return (
-    <div className="section-content" style={{ maxWidth: 960 }}>
+    <div className="section-content" style={{ maxWidth: 1200 }}>
       {/* Header */}
       <div className="stagger-1 section-head" style={{ marginBottom: 28 }}>
         <div>

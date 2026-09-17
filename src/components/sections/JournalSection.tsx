@@ -181,7 +181,7 @@ export default function JournalSection() {
   }
 
   return (
-    <div className="section-content" style={{ maxWidth: 920 }}>
+    <div className="section-content" style={{ maxWidth: 1200 }}>
       {/* Header */}
       <div className="stagger-1 section-head" style={{ marginBottom: 28 }}>
         <div>

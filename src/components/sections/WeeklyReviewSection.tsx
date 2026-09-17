@@ -124,7 +124,7 @@ export default function WeeklyReviewSection() {
   const q = REVIEW_QUESTIONS[questionIndex];
 
   return (
-    <div className="section-content" style={{ maxWidth: 840 }}>
+    <div className="section-content" style={{ maxWidth: 1200 }}>
       {/* Header */}
       <div className="stagger-1 section-head" style={{ marginBottom: 28 }}>
         <div>

@@ -134,7 +134,7 @@ export default function TodaySection() {
   const bsDate = formatBSDate();
 
   return (
-    <div className="section-content" style={{ maxWidth: 880 }}>
+    <div className="section-content" style={{ maxWidth: 1200 }}>
       {/* HERO HEADER */}
       <div className="stagger-1" style={{ marginBottom: 36 }}>
         <h1

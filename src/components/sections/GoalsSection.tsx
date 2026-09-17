@@ -118,7 +118,7 @@ export default function GoalsSection() {
   });
 
   return (
-    <div className="section-content" style={{ maxWidth: 960 }}>
+    <div className="section-content" style={{ maxWidth: 1200 }}>
       {/* Header */}
       <div className="stagger-1 section-head" style={{ marginBottom: 32 }}>
         <div>

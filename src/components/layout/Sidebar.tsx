@@ -1,11 +1,15 @@
 import { useEffect, useRef } from 'react';
-import { Sunrise, Flame, Target, BookOpen, Calendar, BookMarked, ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { Sunrise, Flame, Target, BookOpen, Calendar, BookMarked, ChevronLeft, ChevronRight, Settings, CalendarDays, LayoutDashboard, FileText, Wallet } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { format } from 'date-fns';
 import { getDayOfYear, getYearProgress, formatBSDate } from '../../utils/dateUtils';
 
 const NAV_ITEMS = [
+  { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard, shortcut: 'D' },
   { id: 'today', label: 'Today', icon: Sunrise, shortcut: 'T' },
+  { id: 'calendar', label: 'Calendar', icon: CalendarDays, shortcut: 'C' },
+  { id: 'finance', label: 'Finance', icon: Wallet, shortcut: 'F' },
+  { id: 'notes', label: 'Notes', icon: FileText, shortcut: 'N' },
   { id: 'habits', label: 'Habits', icon: Flame, shortcut: 'H' },
   { id: 'goals', label: 'Goals & Projects', icon: Target, shortcut: 'G' },
   { id: 'journal', label: 'Journal', icon: BookOpen, shortcut: 'J' },
@@ -49,8 +53,14 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="sidebar flex flex-col h-screen sticky top-0 flex-shrink-0 select-none"
-      style={{ width, minWidth: width }}
+      className="sidebar flex flex-col h-screen fixed top-0 left-0 flex-shrink-0 select-none z-50 bg-white border-r"
+      style={{ 
+        width, 
+        minWidth: width,
+        borderColor: 'var(--border)',
+        transition: 'width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
+        boxShadow: sidebarCollapsed ? 'none' : '2px 0 12px rgba(0,0,0,0.03)'
+      }}
     >
       {/* Logo / header */}
       <div className="flex items-center justify-between px-4 py-5 border-b" style={{ borderColor: 'var(--border)', minHeight: 64 }}>

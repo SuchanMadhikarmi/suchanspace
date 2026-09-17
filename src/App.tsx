@@ -15,16 +15,25 @@ import JournalSection from './components/sections/JournalSection'
 import WeeklyReviewSection from './components/sections/WeeklyReviewSection'
 import LearningSection from './components/sections/LearningSection'
 import SettingsSection from './components/sections/SettingsSection'
+import CalendarSection from './features/calendar/CalendarPage'
+import NotesSection from './features/notes/NotesPage'
+import DashboardSection from './features/dashboard/DashboardPage'
+import FinanceSection from './features/finance/FinancePage'
 import Onboarding from './components/Onboarding'
 import FocusModeOverlay from './components/FocusModeOverlay'
+import CommandPalette from './components/common/CommandPalette'
 import { hasSupabaseConfig } from './lib/supabase'
 import { pushUserBackup, syncFromCloudToLocal } from './services/cloudSync'
 import { ensureAndGetAccessStatus, isCurrentUserAdmin, type AccessApprovalStatus } from './services/accessApproval'
+import { useReminders } from './hooks/useReminders'
 
 function AppInner() {
   const { activeSection, sidebarCollapsed, focusMode, setFocusMode } = useApp()
   const [onboardingDone, setOnboardingDone] = useState<boolean | null>(null)
   const isMobile = useIsMobile()
+  
+  // Enable notifications background hook
+  useReminders();
 
   const allSettings = useLiveQuery(() => db.settings.toArray(), [])
 
@@ -59,22 +68,28 @@ function AppInner() {
     )
   }
 
-  const sidebarW = isMobile ? 0 : (sidebarCollapsed ? 64 : 220)
+  const sidebarW = isMobile ? 0 : (sidebarCollapsed ? 64 : 240)
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg)', margin: 0, padding: 0 }}>
       {!isMobile && <Sidebar />}
       <main style={{
         flex: 1,
+        width: isMobile ? '100%' : `calc(100% - ${sidebarW}px)`,
         marginLeft: sidebarW,
         minHeight: '100vh',
         overflowY: 'auto',
         overflowX: 'hidden',
-        transition: 'margin-left 250ms ease',
+        transition: 'margin-left 250ms cubic-bezier(0.4, 0, 0.2, 1), width 250ms cubic-bezier(0.4, 0, 0.2, 1)',
         paddingBottom: isMobile ? 60 : 0,
+        backgroundColor: 'var(--bg)'
       }}>
+        {activeSection === 'dashboard' && <DashboardSection />}
+        {activeSection === 'calendar' && <CalendarSection />}
+        {activeSection === 'notes' && <NotesSection />}
         {activeSection === 'today' && <TodaySection />}
         {activeSection === 'habits' && <HabitsSection />}
+        {activeSection === 'finance' && <FinanceSection />}
         {activeSection === 'goals' && <GoalsSection />}
         {activeSection === 'journal' && <JournalSection />}
         {activeSection === 'weekly' && <WeeklyReviewSection />}
@@ -82,6 +97,7 @@ function AppInner() {
         {activeSection === 'settings' && <SettingsSection />}
       </main>
 
+      <CommandPalette />
       {isMobile && <BottomNav />}
       {focusMode && <FocusModeOverlay />}
       <ToastContainer />

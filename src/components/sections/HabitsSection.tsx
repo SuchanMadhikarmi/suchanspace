@@ -158,7 +158,7 @@ export default function HabitsSection() {
   const worstDay = dayAnalysis.reduce((worst, d) => d.rate < worst.rate ? d : worst, { day: '', rate: 100 });
 
   return (
-    <div className="section-content" style={{ maxWidth: 920 }}>
+    <div className="section-content" style={{ maxWidth: 1200 }}>
       {/* Header */}
       <div className="stagger-1 section-head" style={{ marginBottom: 32 }}>
         <div>
@@ -528,7 +528,7 @@ export default function HabitsSection() {
             <div>
               <label style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', display: 'block', marginBottom: 8, fontFamily: "'DM Sans', sans-serif" }}>Frequency</label>
               <div style={{ display: 'flex', gap: 8 }}>
-                {['daily', 'weekdays', 'weekends'].map(f => (
+                {['daily', 'weekdays', 'weekends', 'custom'].map(f => (
                   <button
                     key={f}
                     onClick={() => setForm(fm => ({ ...fm, frequency: f as typeof fm.frequency }))}

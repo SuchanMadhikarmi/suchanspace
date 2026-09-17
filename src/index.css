@@ -249,3 +249,16 @@ input[type='range']::-webkit-slider-thumb:hover { transform: scale(1.2); }
 @media (max-width: 600px) {
   .section-head { flex-wrap: wrap; gap: 10px; }
 }
+.input-field {
+  background-color: var(--white);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+
+
+/* Fix for form inputs text visibility globally */
+input, select, textarea {
+  background-color: var(--white);
+  color: var(--text);
+}
+input, select, textarea { background-color: var(--white); color: var(--text); }
