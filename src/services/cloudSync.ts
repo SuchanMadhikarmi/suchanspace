@@ -20,10 +20,81 @@ type BackupPayload = {
     monthlyLetters: unknown[];
     annualLetters: unknown[];
     settings: unknown[];
+    events: unknown[];
+    categories: unknown[];
+    notes: unknown[];
+    folders: unknown[];
+    tags: unknown[];
+    templates: unknown[];
+    notifications: unknown[];
+    trades: unknown[];
+    holdings: unknown[];
+    dividends: unknown[];
+    ipoApplications: unknown[];
+    incomeEntries: unknown[];
+    incomeStreams: unknown[];
+    expenses: unknown[];
+    expenseCategories: unknown[];
+    recurringExpenses: unknown[];
+    netWorthSnapshots: unknown[];
+    savingsGoals: unknown[];
+    assets: unknown[];
+    liabilities: unknown[];
   };
 };
 
 const SYNC_PREFIX = 'cloud:lastSyncAt:';
+
+type TableName = keyof BackupPayload['data'];
+type DbTable = {
+  clear(): Promise<void>;
+  count(): Promise<number>;
+  toArray(): Promise<unknown[]>;
+  bulkPut(items: unknown[]): Promise<unknown>;
+  destroy?: never;
+};
+
+function asDbTable(table: unknown): DbTable {
+  return table as DbTable;
+}
+
+const BACKUP_TABLES: Partial<Record<TableName, DbTable>> = {
+  dailyEntries: asDbTable(db.dailyEntries),
+  tasks: asDbTable(db.tasks),
+  habits: asDbTable(db.habits),
+  habitLogs: asDbTable(db.habitLogs),
+  goals: asDbTable(db.goals),
+  projects: asDbTable(db.projects),
+  projectTasks: asDbTable(db.projectTasks),
+  journalEntries: asDbTable(db.journalEntries),
+  weeklyReviews: asDbTable(db.weeklyReviews),
+  learningSessions: asDbTable(db.learningSessions),
+  learningTracks: asDbTable(db.learningTracks),
+  focusSessions: asDbTable(db.focusSessions),
+  monthlyLetters: asDbTable(db.monthlyLetters),
+  annualLetters: asDbTable(db.annualLetters),
+  settings: asDbTable(db.settings),
+  events: asDbTable(db.events),
+  categories: asDbTable(db.categories),
+  notes: asDbTable(db.notes),
+  folders: asDbTable(db.folders),
+  tags: asDbTable(db.tags),
+  templates: asDbTable(db.templates),
+  notifications: asDbTable(db.notifications),
+  trades: asDbTable(db.trades),
+  holdings: asDbTable(db.holdings),
+  dividends: asDbTable(db.dividends),
+  ipoApplications: asDbTable(db.ipoApplications),
+  incomeEntries: asDbTable(db.incomeEntries),
+  incomeStreams: asDbTable(db.incomeStreams),
+  expenses: asDbTable(db.expenses),
+  expenseCategories: asDbTable(db.expenseCategories),
+  recurringExpenses: asDbTable(db.recurringExpenses),
+  netWorthSnapshots: asDbTable(db.netWorthSnapshots),
+  savingsGoals: asDbTable(db.savingsGoals),
+  assets: asDbTable(db.assets),
+  liabilities: asDbTable(db.liabilities),
+};
 
 function syncKey(userId: string) {
   return `${SYNC_PREFIX}${userId}`;
@@ -103,29 +174,12 @@ export async function attemptDataRecovery(userId: string): Promise<boolean> {
       return false;
     }
     
-    const payloadData = data.payload.data;
-    await clearLocalData();
+    const payloadData = data.payload;
+    await restoreFromPayload(payloadData);
     
-    // Restore all data from cloud
-    if (payloadData.dailyEntries.length) await db.dailyEntries.bulkPut(payloadData.dailyEntries as never[]);
-    if (payloadData.tasks.length) await db.tasks.bulkPut(payloadData.tasks as never[]);
-    if (payloadData.habits.length) await db.habits.bulkPut(payloadData.habits as never[]);
-    if (payloadData.habitLogs.length) await db.habitLogs.bulkPut(payloadData.habitLogs as never[]);
-    if (payloadData.goals.length) await db.goals.bulkPut(payloadData.goals as never[]);
-    if (payloadData.projects.length) await db.projects.bulkPut(payloadData.projects as never[]);
-    if (payloadData.projectTasks.length) await db.projectTasks.bulkPut(payloadData.projectTasks as never[]);
-    if (payloadData.journalEntries.length) await db.journalEntries.bulkPut(payloadData.journalEntries as never[]);
-    if (payloadData.weeklyReviews.length) await db.weeklyReviews.bulkPut(payloadData.weeklyReviews as never[]);
-    if (payloadData.learningSessions.length) await db.learningSessions.bulkPut(payloadData.learningSessions as never[]);
-    if (payloadData.learningTracks.length) await db.learningTracks.bulkPut(payloadData.learningTracks as never[]);
-    if (payloadData.focusSessions.length) await db.focusSessions.bulkPut(payloadData.focusSessions as never[]);
-    if (payloadData.monthlyLetters.length) await db.monthlyLetters.bulkPut(payloadData.monthlyLetters as never[]);
-    if (payloadData.annualLetters.length) await db.annualLetters.bulkPut(payloadData.annualLetters as never[]);
-    if (payloadData.settings.length) await db.settings.bulkPut(payloadData.settings as never[]);
-    
-if (data?.updated_at) {
-    setLastSync(userId, data.updated_at);
-  }
+    if (data?.updated_at) {
+      setLastSync(userId, data.updated_at);
+    }
     
     console.log('[Recovery] Data recovery successful');
     return true;
@@ -135,66 +189,34 @@ if (data?.updated_at) {
   }
 }
 
-export async function clearLocalData() {
-  const tables = [
-    db.dailyEntries,
-    db.tasks,
-    db.habits,
-    db.habitLogs,
-    db.goals,
-    db.projects,
-    db.projectTasks,
-    db.journalEntries,
-    db.weeklyReviews,
-    db.learningSessions,
-    db.learningTracks,
-    db.focusSessions,
-    db.monthlyLetters,
-    db.annualLetters,
-    db.settings,
-  ];
-
-  await db.transaction('rw', tables, async () => {
-    await db.dailyEntries.clear();
-    await db.tasks.clear();
-    await db.habits.clear();
-    await db.habitLogs.clear();
-    await db.goals.clear();
-    await db.projects.clear();
-    await db.projectTasks.clear();
-    await db.journalEntries.clear();
-    await db.weeklyReviews.clear();
-    await db.learningSessions.clear();
-    await db.learningTracks.clear();
-    await db.focusSessions.clear();
-    await db.monthlyLetters.clear();
-    await db.annualLetters.clear();
-    await db.settings.clear();
+export async function serializeLocalData(): Promise<BackupPayload> {
+  const entries = Object.entries(BACKUP_TABLES) as [TableName, DbTable][];
+  const rows = await Promise.all(entries.map(([, table]) => table.toArray()));
+  const data = {} as BackupPayload['data'];
+  entries.forEach(([name], i) => {
+    (data as Record<TableName, unknown[]>)[name] = rows[i];
   });
+  return {
+    version: 2,
+    savedAt: new Date().toISOString(),
+    data,
+  };
 }
 
-export async function serializeLocalData(): Promise<BackupPayload> {
-  return {
-    version: 1,
-    savedAt: new Date().toISOString(),
-    data: {
-      dailyEntries: await db.dailyEntries.toArray(),
-      tasks: await db.tasks.toArray(),
-      habits: await db.habits.toArray(),
-      habitLogs: await db.habitLogs.toArray(),
-      goals: await db.goals.toArray(),
-      projects: await db.projects.toArray(),
-      projectTasks: await db.projectTasks.toArray(),
-      journalEntries: await db.journalEntries.toArray(),
-      weeklyReviews: await db.weeklyReviews.toArray(),
-      learningSessions: await db.learningSessions.toArray(),
-      learningTracks: await db.learningTracks.toArray(),
-      focusSessions: await db.focusSessions.toArray(),
-      monthlyLetters: await db.monthlyLetters.toArray(),
-      annualLetters: await db.annualLetters.toArray(),
-      settings: await db.settings.toArray(),
-    },
-  };
+/**
+ * Restore a payload into local DB. Only clears + writes tables that the payload
+ * actually contains, so a legacy backup (missing newer tables) never wipes data.
+ */
+async function restoreFromPayload(payload: BackupPayload): Promise<void> {
+  const entries = Object.entries(BACKUP_TABLES) as [TableName, DbTable][];
+  const present = entries.filter(([name]) => Array.isArray(payload.data[name]));
+  await db.transaction('rw', present.map(([, t]) => t) as never, async () => {
+    for (const [name, table] of present) {
+      await table.clear();
+      const rows = payload.data[name];
+      if (rows.length) await table.bulkPut(rows);
+    }
+  });
 }
 
 export async function pushUserBackup(userId: string) {
@@ -267,13 +289,8 @@ function isValidBackupPayload(backup: BackupPayload | null | undefined): backup 
  * Get count of local data entries (quick health check)
  */
 async function getLocalDataCount(): Promise<number> {
-  const counts = await Promise.all([
-    db.dailyEntries.count(),
-    db.tasks.count(),
-    db.habits.count(),
-    db.goals.count(),
-    db.journalEntries.count(),
-  ]);
+  const tables = Object.values(BACKUP_TABLES).filter((t): t is DbTable => Boolean(t));
+  const counts = await Promise.all(tables.map(t => t.count()));
   return counts.reduce((a, b) => a + b, 0);
 }
 
@@ -363,49 +380,15 @@ export async function syncFromCloudToLocal(userId: string): Promise<'restored' |
     return 'preserved_local';
   }
 
-  // Safe to clear and restore
-  await clearLocalData();
-
-  if (payloadData.dailyEntries.length) await db.dailyEntries.bulkPut(payloadData.dailyEntries as never[]);
-  if (payloadData.tasks.length) await db.tasks.bulkPut(payloadData.tasks as never[]);
-  if (payloadData.habits.length) await db.habits.bulkPut(payloadData.habits as never[]);
-  if (payloadData.habitLogs.length) await db.habitLogs.bulkPut(payloadData.habitLogs as never[]);
-  if (payloadData.goals.length) await db.goals.bulkPut(payloadData.goals as never[]);
-  if (payloadData.projects.length) await db.projects.bulkPut(payloadData.projects as never[]);
-  if (payloadData.projectTasks.length) await db.projectTasks.bulkPut(payloadData.projectTasks as never[]);
-  if (payloadData.journalEntries.length) await db.journalEntries.bulkPut(payloadData.journalEntries as never[]);
-  if (payloadData.weeklyReviews.length) await db.weeklyReviews.bulkPut(payloadData.weeklyReviews as never[]);
-  if (payloadData.learningSessions.length) await db.learningSessions.bulkPut(payloadData.learningSessions as never[]);
-  if (payloadData.learningTracks.length) await db.learningTracks.bulkPut(payloadData.learningTracks as never[]);
-  if (payloadData.focusSessions.length) await db.focusSessions.bulkPut(payloadData.focusSessions as never[]);
-  if (payloadData.monthlyLetters.length) await db.monthlyLetters.bulkPut(payloadData.monthlyLetters as never[]);
-  if (payloadData.annualLetters.length) await db.annualLetters.bulkPut(payloadData.annualLetters as never[]);
-  if (payloadData.settings.length) await db.settings.bulkPut(payloadData.settings as never[]);
+  // Safe to clear and restore only the tables present in the backup
+  await restoreFromPayload(backup);
 
   return 'restored';
 }
 
-export async function importLocalBackup(backup: { data: any }): Promise<void> {
-  const payloadData = backup.data;
-  if (!payloadData) throw new Error('Invalid backup format');
-  
-  await clearLocalData();
-
-  if (payloadData.dailyEntries?.length) await db.dailyEntries.bulkPut(payloadData.dailyEntries as never[]);
-  if (payloadData.tasks?.length) await db.tasks.bulkPut(payloadData.tasks as never[]);
-  if (payloadData.habits?.length) await db.habits.bulkPut(payloadData.habits as never[]);
-  if (payloadData.habitLogs?.length) await db.habitLogs.bulkPut(payloadData.habitLogs as never[]);
-  if (payloadData.goals?.length) await db.goals.bulkPut(payloadData.goals as never[]);
-  if (payloadData.projects?.length) await db.projects.bulkPut(payloadData.projects as never[]);
-  if (payloadData.projectTasks?.length) await db.projectTasks.bulkPut(payloadData.projectTasks as never[]);
-  if (payloadData.journalEntries?.length) await db.journalEntries.bulkPut(payloadData.journalEntries as never[]);
-  if (payloadData.weeklyReviews?.length) await db.weeklyReviews.bulkPut(payloadData.weeklyReviews as never[]);
-  if (payloadData.learningSessions?.length) await db.learningSessions.bulkPut(payloadData.learningSessions as never[]);
-  if (payloadData.learningTracks?.length) await db.learningTracks.bulkPut(payloadData.learningTracks as never[]);
-  if (payloadData.focusSessions?.length) await db.focusSessions.bulkPut(payloadData.focusSessions as never[]);
-  if (payloadData.monthlyLetters?.length) await db.monthlyLetters.bulkPut(payloadData.monthlyLetters as never[]);
-  if (payloadData.annualLetters?.length) await db.annualLetters.bulkPut(payloadData.annualLetters as never[]);
-  if (payloadData.settings?.length) await db.settings.bulkPut(payloadData.settings as never[]);
+export async function importLocalBackup(backup: BackupPayload): Promise<void> {
+  if (!backup?.data || !isValidBackupPayload(backup)) throw new Error('Invalid backup format');
+  await restoreFromPayload(backup);
 }
 
 /**
